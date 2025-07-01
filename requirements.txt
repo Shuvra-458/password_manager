@@ -1,4 +1,1 @@
-tkinter
-bcrypt
-cryptography
 streamlit
