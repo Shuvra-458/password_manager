@@ -1,5 +1,7 @@
 # Password Manager
 
+For the master password use admin123
+
 A secure and user-friendly password manager application built with Python and Tkinter.  
 Features include:
 
