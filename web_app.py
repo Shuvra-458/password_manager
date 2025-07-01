@@ -11,11 +11,12 @@ MASTER_FILE = 'master.json'
 
 # Utility: Load master password
 def load_master_password():
-    if os.path.exists(MASTER_FILE):
-        with open(MASTER_FILE, 'r') as file:
-            data = json.load(file)
-            return data.get('master_password')
-    return None
+    if not os.path.exists(MASTER_FILE):
+        return None  # Means no master password exists yet
+    with open(MASTER_FILE, 'r') as f:
+        data = json.load(f)
+        return data.get('master_password')
+
 
 # Utility: Load vault data
 def load_vault():
@@ -49,22 +50,38 @@ st.set_page_config(page_title="🔐 Password Manager", layout="centered")
 
 if 'unlocked' not in st.session_state:
     st.session_state.unlocked = False
+master_password = load_master_password()
+
 
 st.title("🔐 Password Manager")
+if master_password is None:
+    st.title("🔐 Setup Master Password (First Time Launch)")
 
-# Master Password Unlock
+    new_master_password = st.text_input("Set a Master Password", type="password")
+    confirm_password = st.text_input("Confirm Master Password", type="password")
+
+    if st.button("Save Master Password"):
+        if new_master_password and new_master_password == confirm_password:
+            with open(MASTER_FILE, 'w') as f:
+                json.dump({"master_password": new_master_password}, f, indent=4)
+            st.success("Master password set successfully! Please restart the app and login.")
+            st.stop()
+        else:
+            st.error("Passwords do not match or empty.")
+    st.stop()
+
+# ✅ Normal Unlock Screen
 if not st.session_state.unlocked:
-    st.subheader("Enter Master Password:")
+    st.title("🔐 Enter Master Password")
     input_password = st.text_input("Master Password", type="password")
     if st.button("Unlock"):
-        master_password = load_master_password()
         if input_password == master_password:
             st.session_state.unlocked = True
             st.success("Vault unlocked!")
         else:
             st.error("Incorrect master password.")
-    st.stop()
-
+    if not st.session_state.unlocked:
+        st.stop()
 # Load vault after unlock
 vault = load_vault()
 
