@@ -39,15 +39,36 @@ if st.session_state.user is None:
 # Main Menu
 if st.session_state.user:
     st.sidebar.title(f"Welcome, {st.session_state.user} 👋")
-    menu = st.sidebar.selectbox("Menu", ["View Vault", "Add New Password", "Generate Password", "Search", "Security Audit", "Logout"])
+    menu = st.sidebar.selectbox("Menu", ["View Vault", "Add New Password", "Generate Password", "Search", "Delete Password", "Security Audit", "Logout"])
 
     if menu == "View Vault":
         vault = load_vault(st.session_state.user)
-        if vault:
-            st.dataframe(vault)
-        else:
+        if not vault:
             st.info("Vault is empty.")
+        else:
+            st.subheader("🔒 Your Saved Passwords")
+            for i, entry in enumerate(vault):
+                col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+                with col1:
+                    st.write(f"**Website:** {entry['website']}")
+                with col2:
+                    st.write(f"**Username:** {entry['username']}")
 
+                with col3:
+                    key = f"show_pass_{i}"
+                    if key not in st.session_state:
+                       st.session_state[key] = False
+
+                    if st.session_state[key]:
+                       st.write(f"**Password:** {entry['password']}")
+                    else:
+                       st.write(f"**Password:** {'•' * len(entry['password'])}")
+
+               with col4:
+                    if st.button("Show" if not st.session_state[key] else "Hide", key=f"toggle_{i}"):
+                       st.session_state[key] = not st.session_state[key]
+
+    
     elif menu == "Add New Password":
         website = st.text_input("Website/App")
         username = st.text_input("Username/Email")
@@ -85,6 +106,19 @@ if st.session_state.user:
                 st.write(f"🔑 Website: {entry['website']}, Username: {entry['username']}, Password: {entry['password']}")
          else:
              st.success("✅ No weak passwords found!")
+    elif menu == "Delete Password":
+        vault = load_vault(st.session_state.user)
+        if not vault:
+            st.info("Your vault is empty. Nothing to delete.")
+        else:
+            websites = [f"{entry['website']} - {entry['username']}" for entry in vault]
+            selected = st.selectbox("Select an entry to delete:", websites)
+            if selected:
+                index_to_delete = websites.index(selected)
+                if st.button("Confirm Delete"):
+                    deleted_entry = vault.pop(index_to_delete)
+                    save_vault(st.session_state.user, vault)
+                    st.success(f"Deleted entry for: {deleted_entry['website']} / {deleted_entry['username']}")
 
 
     elif menu == "Logout":
