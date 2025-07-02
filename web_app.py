@@ -90,10 +90,21 @@ if st.session_state.user:
         st.text_area("Generated Password", new_password)
 
     elif menu == "Search":
-        query = st.text_input("Search website or username")
-        vault = load_vault(st.session_state.user)
-        results = [e for e in vault if query.lower() in e['website'].lower() or query.lower() in e['username'].lower()]
-        st.write(results if results else "No results found.")
+        search_term = st.text_input("Enter website or username to search:")
+
+        if search_term:
+            vault = load_vault(st.session_state.user)
+            results = [entry for entry in vault if search_term.lower() in entry['website'].lower() or search_term.lower() in entry['username'].lower()]
+
+            if results:
+               st.success(f"Found {len(results)} matching entries:")
+               for entry in results:
+                   st.write(f"**Website:** {entry['website']}")
+                   st.write(f"**Username:** {entry['username']}")
+                   st.write(f"**Password:** {entry['password']}")
+                   st.markdown("---")
+            else:
+               st.warning("No matching entries found.")
 
     elif menu == "Security Audit":
          vault = load_vault(st.session_state.user)
