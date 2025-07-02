@@ -76,15 +76,15 @@ if st.session_state.user:
         st.write(results if results else "No results found.")
 
     elif menu == "Security Audit":
-    vault = load_vault(st.session_state.user)
-    weak = [e for e in vault if len(e['password']) < 8]
+         vault = load_vault(st.session_state.user)
+         weak = [e for e in vault if len(e['password']) < 8]
 
-    if weak:
-        st.warning(f"⚠️ Weak passwords found: {len(weak)}")
-        for entry in weak:
-            st.write(f"🔑 Website: {entry['website']}, Username: {entry['username']}, Password: {entry['password']}")
-    else:
-        st.success("✅ No weak passwords found!")
+         if weak:
+            st.warning(f"⚠️ Weak passwords found: {len(weak)}")
+            for entry in weak:
+                st.write(f"🔑 Website: {entry['website']}, Username: {entry['username']}, Password: {entry['password']}")
+         else:
+             st.success("✅ No weak passwords found!")
 
 
     elif menu == "Logout":
