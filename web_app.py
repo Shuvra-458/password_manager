@@ -122,4 +122,4 @@ if st.session_state.user:
 
     elif menu == "Logout":
         st.session_state.user = None
-        st.experimental_rerun()
+        st.rerun()
