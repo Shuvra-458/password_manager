@@ -63,10 +63,9 @@ if st.session_state.user:
                        st.write(f"**Password:** {entry['password']}")
                     else:
                        st.write(f"**Password:** {'•' * len(entry['password'])}")
-
-               with col4:
+                with col4:
                     if st.button("Show" if not st.session_state[key] else "Hide", key=f"toggle_{i}"):
-                       st.session_state[key] = not st.session_state[key]
+                        st.session_state[key] = not st.session_state[key]
 
     
     elif menu == "Add New Password":
