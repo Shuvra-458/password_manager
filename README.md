@@ -1,46 +1,45 @@
-# Password Manager
+# 🔐 Multi-User Password Manager - Streamlit App
 
-For the master password use admin123
-
-A secure and user-friendly password manager application built with Python and Tkinter.  
-Features include:
-
-- **Master Password** protection to unlock your vault
-- **AES encryption** to securely store passwords
-- **Password generator** with customizable options
-- **Search and filter** passwords easily
-- **Security audit** tool to check password strength and reuse
-- Beautiful and intuitive **GUI interface**
+This is a **multi-user password manager** built with **Python** and **Streamlit**, allowing each user to **register**, **login**, and manage their own **private password vault** securely.
 
 ---
 
-## Features
+## ✅ Features
 
-- Set and verify a master password to protect your vault
-- Store and manage multiple password entries securely
-- Generate strong random passwords with special characters
-- Search and filter your saved passwords by site or username
-- Perform security audits to identify weak or reused passwords
+- 🧑‍💻 **User Registration & Login (Multi-User Support)**
+- 🔑 **Per-user Master Password (Hashed for security)**
+- 📂 **Each user has their own vault file (`vault_<username>.json`)**
+- ➕ **Add New Passwords**
+- 👁️ **Show/Hide Passwords with dot masking and toggle**
+- 🔍 **Search by website or username**
+- 🗑️ **Delete Password Entries**
+- 🛡️ **Security Audit (Detect Weak Passwords)**
+- 🎲 **Password Generator**
+- 🚪 **Logout with full session clearing**
+- ☁️ **Streamlit Cloud Ready for Deployment**
 
 ---
 
-## Installation
+## ✅ Installation & Running Locally
 
-1. Clone the repository:
+1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/yourusername/password_manager.git
-   cd password_manager
-2.(Optional) Create and activate a virtual environment:
+```bash
+git clone https://github.com/YourUsername/YourRepoName.git
+cd PasswordManager
+```
+2. **Create a virtual environment (optional but recommended):**
+```bash
+python -m venv venv
+source venv/bin/activate   # (Linux/Mac)
+venv\Scripts\activate      # (Windows)
+```
+3. **Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+4. **Run the App**
+```bash
+streamlit run web_app.py
+```
 
-            python -m venv venv
-            source venv/bin/activate   # for Linux/macOS
-            venv\Scripts\activate      # for Windows 
-
-3. Install required packages:
-           pip install -r requirements.txt
-
-## Usage
-         Run the main application:
-         python main.py
-         On first launch, you will be prompted to create a master password. Use this password to unlock your vault in future sessions.
