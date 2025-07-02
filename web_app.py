@@ -1,151 +1,85 @@
 import streamlit as st
-import json
-import os
-import random
-import string
-from datetime import datetime
+from vault_utils import *
 
-# Paths
-VAULT_FILE = 'vault.json'
-MASTER_FILE = 'master.json'
+st.set_page_config(page_title="Multi-User Password Manager", layout="wide")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
-# Utility: Load master password
-def load_master_password():
-    if not os.path.exists(MASTER_FILE):
-        return None  # Means no master password exists yet
-    with open(MASTER_FILE, 'r') as f:
-        data = json.load(f)
-        return data.get('master_password')
+if "user" not in st.session_state:
+    st.session_state.user = None
 
+st.title("🔐 Multi-User Password Manager")
 
-# Utility: Load vault data
-def load_vault():
-    if os.path.exists(VAULT_FILE):
-        with open(VAULT_FILE, 'r') as file:
-            return json.load(file)
-    return []
+# Registration
+if st.session_state.user is None:
+    option = st.radio("Login or Register?", ["Login", "Register"])
 
-# Utility: Save vault data
-def save_vault(vault_data):
-    with open(VAULT_FILE, 'w') as file:
-        json.dump(vault_data, file, indent=4)
+    if option == "Register":
+        username = st.text_input("Username")
+        password = st.text_input("Master Password", type="password")
+        confirm = st.text_input("Confirm Password", type="password")
+        if st.button("Register"):
+            if password != confirm:
+                st.error("Passwords do not match.")
+            elif register_user(username, password):
+                st.success("Registration successful! Please login.")
+            else:
+                st.error("Username already exists.")
 
-# Password Generator
-def generate_password(length=12):
-    chars = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(random.choice(chars) for _ in range(length))
+    elif option == "Login":
+        username = st.text_input("Username")
+        password = st.text_input("Master Password", type="password")
+        if st.button("Login"):
+            if authenticate_user(username, password):
+                st.success("Login successful!")
+                st.session_state.user = username
+            else:
+                st.error("Invalid username or password.")
 
-# Security Audit
-def security_audit(vault_data):
-    weak_passwords = []
-    for entry in vault_data:
-        pwd = entry['password']
-        if len(pwd) < 8 or pwd.isalpha() or pwd.isnumeric():
-            weak_passwords.append(entry)
-    return weak_passwords
+# Main Menu
+if st.session_state.user:
+    st.sidebar.title(f"Welcome, {st.session_state.user} 👋")
+    menu = st.sidebar.selectbox("Menu", ["View Vault", "Add New Password", "Generate Password", "Search", "Security Audit", "Logout"])
 
-# -------------------- Streamlit UI --------------------
-
-st.set_page_config(page_title="🔐 Password Manager", layout="centered")
-
-if 'unlocked' not in st.session_state:
-    st.session_state.unlocked = False
-master_password = load_master_password()
-
-
-st.title("🔐 Password Manager")
-if master_password is None:
-    st.title("🔐 Setup Master Password (First Time Launch)")
-
-    new_master_password = st.text_input("Set a Master Password", type="password")
-    confirm_password = st.text_input("Confirm Master Password", type="password")
-
-    if st.button("Save Master Password"):
-        if new_master_password and new_master_password == confirm_password:
-            with open(MASTER_FILE, 'w') as f:
-                json.dump({"master_password": new_master_password}, f, indent=4)
-            st.success("Master password set successfully! Please restart the app and login.")
-            st.stop()
+    if menu == "View Vault":
+        vault = load_vault(st.session_state.user)
+        if vault:
+            st.dataframe(vault)
         else:
-            st.error("Passwords do not match or empty.")
-    st.stop()
+            st.info("Vault is empty.")
 
-# ✅ Normal Unlock Screen
-if not st.session_state.unlocked:
-    st.title("🔐 Enter Master Password")
-    input_password = st.text_input("Master Password", type="password")
-    if st.button("Unlock"):
-        if input_password == master_password:
-            st.session_state.unlocked = True
-            st.success("Vault unlocked!")
-        else:
-            st.error("Incorrect master password.")
-    if not st.session_state.unlocked:
-        st.stop()
-# Load vault after unlock
-vault = load_vault()
+    elif menu == "Add New Password":
+        website = st.text_input("Website/App")
+        username = st.text_input("Username/Email")
+        password = st.text_input("Password")
+        if st.button("Save Password"):
+            vault = load_vault(st.session_state.user)
+            entry = {
+                "website": website,
+                "username": username,
+                "password": password,
+                "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            vault.append(entry)
+            save_vault(st.session_state.user, vault)
+            st.success("Password saved.")
 
-# Navigation menu
-menu = st.sidebar.selectbox("📋 Menu", ["View Vault", "Add New Password", "Generate Password", "Search", "Security Audit", "Export Vault"])
+    elif menu == "Generate Password":
+        length = st.slider("Password Length", 8, 32, 12)
+        new_password = generate_password(length)
+        st.text_area("Generated Password", new_password)
 
-# View Vault
-if menu == "View Vault":
-    st.subheader("🔎 Saved Passwords")
-    if vault:
-        st.dataframe(vault)
-    else:
-        st.info("Vault is empty.")
+    elif menu == "Search":
+        query = st.text_input("Search website or username")
+        vault = load_vault(st.session_state.user)
+        results = [e for e in vault if query.lower() in e['website'].lower() or query.lower() in e['username'].lower()]
+        st.write(results if results else "No results found.")
 
-# Add New Password
-elif menu == "Add New Password":
-    st.subheader("➕ Add New Password Entry")
-    website = st.text_input("Website / App")
-    username = st.text_input("Username / Email")
-    password = st.text_input("Password")
-    if st.button("Save"):
-        new_entry = {
-            "website": website,
-            "username": username,
-            "password": password,
-            "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        vault.append(new_entry)
-        save_vault(vault)
-        st.success("New password saved!")
+    elif menu == "Security Audit":
+        vault = load_vault(st.session_state.user)
+        weak = [e for e in vault if len(e['password']) < 8]
+        st.warning(f"Weak passwords found: {len(weak)}") if weak else st.success("No weak passwords!")
 
-# Generate Password
-elif menu == "Generate Password":
-    st.subheader("🔑 Password Generator")
-    length = st.slider("Select password length", 8, 32, 12)
-    generated_password = generate_password(length)
-    st.code(generated_password)
-    if st.button("Copy to Clipboard"):
-        st.write("Copy manually from above. (Streamlit can't auto-copy for now)")
-
-# Search & Filter
-elif menu == "Search":
-    st.subheader("🔍 Search Passwords")
-    search_term = st.text_input("Search by Website or Username")
-    filtered = [entry for entry in vault if search_term.lower() in entry['website'].lower() or search_term.lower() in entry['username'].lower()]
-    if filtered:
-        st.dataframe(filtered)
-    else:
-        st.info("No matching entries found.")
-
-# Security Audit
-elif menu == "Security Audit":
-    st.subheader("🛡️ Weak Password Check")
-    weak = security_audit(vault)
-    if weak:
-        st.warning(f"Found {len(weak)} weak passwords:")
-        st.dataframe(weak)
-    else:
-        st.success("All passwords meet basic strength criteria.")
-
-# Export Vault
-elif menu == "Export Vault":
-    st.subheader("📤 Export Vault")
-    if st.button("Download as CSV"):
-        import pandas as pd
-        df = pd.DataFrame(vault)
-        st.download_button("Click to Download CSV", df.to_csv(index=False), file_name="vault_export.csv", mime="text/csv")
+    elif menu == "Logout":
+        st.session_state.user = None
+        st.experimental_rerun()
