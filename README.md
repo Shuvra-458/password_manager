@@ -25,7 +25,7 @@ This is a **multi-user password manager** built with **Python** and **Streamlit*
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/SHuvra-458/password_manager.git
+git clone https://github.com/Shuvra-458/password_manager.git
 cd password_manager
 ```
 2. **Create a virtual environment (optional but recommended):**
